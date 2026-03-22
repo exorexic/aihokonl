@@ -247,7 +247,11 @@
             font-size: 14px;
         }
 
-        .sdp-area textarea {
+        .data-area {
+            margin-top: 15px;
+        }
+
+        textarea {
             width: 100%;
             padding: 10px;
             border-radius: 15px;
@@ -258,15 +262,6 @@
             margin: 10px 0;
             border: 1px solid #ffd966;
             resize: vertical;
-        }
-
-        .step-indicator {
-            background: rgba(0,0,0,0.5);
-            border-radius: 15px;
-            padding: 8px;
-            margin: 10px 0;
-            font-size: 12px;
-            color: #ffd966;
         }
 
         @media (max-width: 700px) {
@@ -308,40 +303,38 @@
             <div class="mode-buttons">
                 <button class="mode-btn two-players" id="twoPlayersBtn">👥 2 игрока (на одном телефоне)</button>
                 <button class="mode-btn bot" id="botModeBtn">🤖 Игра с ботом</button>
-                <button class="mode-btn online" id="onlineModeBtn">🌐 P2P Онлайн игра</button>
+                <button class="mode-btn online" id="onlineModeBtn">🌐 Онлайн игра</button>
             </div>
             
             <div id="onlinePanel" class="online-panel">
-                <h3 style="margin:0 0 10px 0; color:white;">🎮 P2P Онлайн режим</h3>
+                <h3 style="margin:0 0 10px 0; color:white;">🎮 Онлайн режим</h3>
                 
-                <div id="step1" class="step-indicator">📌 ШАГ 1: Создайте комнату</div>
-                
-                <div class="room-control">
-                    <input type="text" id="roomName" placeholder="Название комнаты" maxlength="20" value="HOCKEY">
-                    <button id="createRoomBtn">✨ Создать комнату</button>
+                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                    <button id="hostBtn" style="flex:1; background:#ff9800;">🔴 СОЗДАТЬ КОМНАТУ</button>
+                    <button id="joinBtn" style="flex:1; background:#4caf50;">🟢 ПОДКЛЮЧИТЬСЯ</button>
                 </div>
                 
-                <div id="inviteDataArea" style="display:none;">
-                    <div class="step-indicator" id="step2">📌 ШАГ 2: Отправьте приглашение другу</div>
-                    <textarea id="inviteText" rows="3" readonly></textarea>
-                    <button id="copyInviteBtn">📋 Копировать приглашение</button>
-                    <div class="step-indicator" id="step3" style="display:none;">📌 ШАГ 3: Вставьте ответ друга</div>
-                    <textarea id="friendAnswer" rows="3" placeholder="Вставьте ответ друга..." style="display:none;"></textarea>
-                    <button id="sendAnswerToFriendBtn" style="display:none;">✅ Подключиться</button>
+                <div id="hostArea" style="display:none;">
+                    <div class="status waiting">📋 Ваше приглашение (отправьте другу):</div>
+                    <textarea id="hostData" rows="3" readonly></textarea>
+                    <button id="copyHostData">📋 Копировать</button>
+                    <div id="hostWaitStatus" class="status waiting" style="margin-top:10px;">⏳ Ожидание ответа от друга...</div>
+                    <textarea id="guestAnswer" rows="3" placeholder="Вставьте ответ друга..." style="margin-top:10px;"></textarea>
+                    <button id="submitAnswerBtn">✅ Подключиться</button>
                 </div>
                 
                 <div id="joinArea" style="display:none;">
-                    <div class="step-indicator">📌 Вставьте приглашение от друга</div>
-                    <textarea id="friendInvite" rows="3" placeholder="Вставьте приглашение..."></textarea>
-                    <button id="acceptInviteBtn">✅ Принять приглашение</button>
-                    <div id="myAnswerArea" style="display:none; margin-top:10px;">
-                        <div class="step-indicator">📌 Отправьте этот ответ другу</div>
-                        <textarea id="myAnswer" rows="3" readonly></textarea>
-                        <button id="copyAnswerBtn">📋 Копировать ответ</button>
+                    <div class="status waiting">📥 Вставьте приглашение от друга:</div>
+                    <textarea id="joinData" rows="3" placeholder="Вставьте сюда приглашение..."></textarea>
+                    <button id="submitJoinBtn">✅ Принять и подключиться</button>
+                    <div id="joinAnswerArea" style="display:none; margin-top:10px;">
+                        <div class="status waiting">📤 Отправьте этот ответ другу:</div>
+                        <textarea id="joinAnswer" rows="3" readonly></textarea>
+                        <button id="copyJoinAnswer">📋 Копировать</button>
                     </div>
                 </div>
                 
-                <div id="connectionStatus" class="status waiting">💡 Создайте комнату или вставьте приглашение</div>
+                <div id="connectionStatus" class="status waiting">💡 Нажмите "Создать комнату" или "Подключиться"</div>
             </div>
         </div>
     </div>
@@ -360,7 +353,7 @@
         let gameMode = null;
         let gameActive = true;
         
-        const avatars = ['🐱', '🐶', '🐼', '🦊', '🐻', '🐨', '🦁', '🐸', '🐒', '🐧', '🦉', '🐺', '🐰', '🦝', '🐘', '🦒'];
+        const avatars = ['🐱', '🐶', '🐼', '🦊', '🐻', '🐨', '🦁', '🐸', '🐒', '🐧', '🦉', '🐺', '🐰', '🦝'];
         const player1Avatar = avatars[Math.floor(Math.random() * avatars.length)];
         const player2Avatar = avatars[Math.floor(Math.random() * avatars.length)];
         
@@ -389,21 +382,20 @@
             onlineModeBtn: document.getElementById('onlineModeBtn'),
             onlinePanel: document.getElementById('onlinePanel'),
             connectionStatus: document.getElementById('connectionStatus'),
-            roomName: document.getElementById('roomName'),
-            createRoomBtn: document.getElementById('createRoomBtn'),
-            inviteDataArea: document.getElementById('inviteDataArea'),
-            inviteText: document.getElementById('inviteText'),
-            copyInviteBtn: document.getElementById('copyInviteBtn'),
-            friendAnswer: document.getElementById('friendAnswer'),
-            sendAnswerToFriendBtn: document.getElementById('sendAnswerToFriendBtn'),
+            hostBtn: document.getElementById('hostBtn'),
+            joinBtn: document.getElementById('joinBtn'),
+            hostArea: document.getElementById('hostArea'),
             joinArea: document.getElementById('joinArea'),
-            friendInvite: document.getElementById('friendInvite'),
-            acceptInviteBtn: document.getElementById('acceptInviteBtn'),
-            myAnswerArea: document.getElementById('myAnswerArea'),
-            myAnswer: document.getElementById('myAnswer'),
-            copyAnswerBtn: document.getElementById('copyAnswerBtn'),
-            step2: document.getElementById('step2'),
-            step3: document.getElementById('step3'),
+            hostData: document.getElementById('hostData'),
+            copyHostData: document.getElementById('copyHostData'),
+            hostWaitStatus: document.getElementById('hostWaitStatus'),
+            guestAnswer: document.getElementById('guestAnswer'),
+            submitAnswerBtn: document.getElementById('submitAnswerBtn'),
+            joinData: document.getElementById('joinData'),
+            submitJoinBtn: document.getElementById('submitJoinBtn'),
+            joinAnswerArea: document.getElementById('joinAnswerArea'),
+            joinAnswer: document.getElementById('joinAnswer'),
+            copyJoinAnswer: document.getElementById('copyJoinAnswer'),
             controlsInfo: document.getElementById('controlsInfo')
         };
         
@@ -634,7 +626,7 @@
             ctx.fillStyle = 'white';
             if (gameMode === 'twoPlayers') ctx.fillText('👥 2 игрока', 20, 65);
             else if (gameMode === 'bot') ctx.fillText('🤖 Игрок VS Бот', 20, 65);
-            else if (gameMode === 'online') ctx.fillText(connectionActive ? '🌐 P2P Онлайн - соединено' : '🌐 P2P Онлайн - ожидание', 20, 65);
+            else if (gameMode === 'online') ctx.fillText(connectionActive ? '🌐 Онлайн - соединено' : '🌐 Онлайн - ожидание', 20, 65);
         }
         
         // P2P функции
@@ -648,7 +640,7 @@
                     DOM.connectionStatus.innerHTML = '✅ Соединение установлено! Игра началась!';
                     gameActive = true;
                     resetPuck();
-                    DOM.menuOverlay.style.display = 'none';
+                    setTimeout(() => { DOM.menuOverlay.style.display = 'none'; }, 1000);
                 }
             };
             return peerConnection;
@@ -681,7 +673,7 @@
             }
         }
         
-        async function createRoom() {
+        async function startHost() {
             isHost = true;
             await createPeerConnection();
             dataChannel = peerConnection.createDataChannel('hockey');
@@ -689,93 +681,73 @@
             const offer = await peerConnection.createOffer();
             await peerConnection.setLocalDescription(offer);
             
-            const inviteData = {
-                type: 'invite',
-                room: DOM.roomName.value,
-                sdp: peerConnection.localDescription
-            };
-            
-            DOM.inviteText.value = JSON.stringify(inviteData);
-            DOM.inviteDataArea.style.display = 'block';
+            DOM.hostData.value = JSON.stringify(peerConnection.localDescription);
+            DOM.hostArea.style.display = 'block';
             DOM.joinArea.style.display = 'none';
-            DOM.step2.style.display = 'block';
-            DOM.step3.style.display = 'block';
-            DOM.friendAnswer.style.display = 'block';
-            DOM.sendAnswerToFriendBtn.style.display = 'block';
-            DOM.connectionStatus.innerHTML = '📤 Отправьте приглашение другу и ждите ответа';
+            DOM.connectionStatus.innerHTML = '📋 Отправьте приглашение другу';
         }
         
-        async function acceptInvite() {
-            const inviteText = DOM.friendInvite.value;
+        async function submitHostAnswer() {
+            const answerText = DOM.guestAnswer.value;
+            if (!answerText) {
+                DOM.connectionStatus.innerHTML = '⚠️ Вставьте ответ друга!';
+                return;
+            }
+            const answer = JSON.parse(answerText);
+            await peerConnection.setRemoteDescription(answer);
+            DOM.hostWaitStatus.innerHTML = '🟢 Подключение...';
+            DOM.connectionStatus.innerHTML = '🟢 Устанавливается соединение...';
+        }
+        
+        async function startJoin() {
+            const inviteText = DOM.joinData.value;
             if (!inviteText) {
                 DOM.connectionStatus.innerHTML = '⚠️ Вставьте приглашение!';
                 return;
             }
             
             isHost = false;
-            const invite = JSON.parse(inviteText);
             await createPeerConnection();
-            
             peerConnection.ondatachannel = (event) => {
                 dataChannel = event.channel;
                 setupDataChannel();
             };
             
-            await peerConnection.setRemoteDescription(invite.sdp);
+            const invite = JSON.parse(inviteText);
+            await peerConnection.setRemoteDescription(invite);
             const answer = await peerConnection.createAnswer();
             await peerConnection.setLocalDescription(answer);
             
-            const answerData = {
-                type: 'answer',
-                sdp: peerConnection.localDescription
-            };
-            
-            DOM.myAnswer.value = JSON.stringify(answerData);
-            DOM.myAnswerArea.style.display = 'block';
-            DOM.connectionStatus.innerHTML = '📤 Отправьте этот ответ создателю комнаты';
+            DOM.joinAnswer.value = JSON.stringify(peerConnection.localDescription);
+            DOM.joinAnswerArea.style.display = 'block';
+            DOM.connectionStatus.innerHTML = '📤 Отправьте этот ответ другу';
         }
         
-        async function sendAnswerToFriend() {
-            const answerText = DOM.friendAnswer.value;
-            if (!answerText) {
-                DOM.connectionStatus.innerHTML = '⚠️ Вставьте ответ друга!';
-                return;
-            }
-            
-            const answer = JSON.parse(answerText);
-            await peerConnection.setRemoteDescription(answer.sdp);
-            DOM.connectionStatus.innerHTML = '🟢 Подключение...';
-            DOM.step3.style.display = 'none';
-            DOM.friendAnswer.style.display = 'none';
-            DOM.sendAnswerToFriendBtn.style.display = 'none';
-        }
+        DOM.hostBtn.onclick = () => {
+            startHost();
+            DOM.hostArea.style.display = 'block';
+            DOM.joinArea.style.display = 'none';
+        };
         
-        DOM.copyInviteBtn.onclick = () => {
-            DOM.inviteText.select();
+        DOM.joinBtn.onclick = () => {
+            DOM.joinArea.style.display = 'block';
+            DOM.hostArea.style.display = 'none';
+        };
+        
+        DOM.copyHostData.onclick = () => {
+            DOM.hostData.select();
             document.execCommand('copy');
             DOM.connectionStatus.innerHTML = '✅ Приглашение скопировано! Отправьте другу';
         };
         
-        DOM.copyAnswerBtn.onclick = () => {
-            DOM.myAnswer.select();
+        DOM.copyJoinAnswer.onclick = () => {
+            DOM.joinAnswer.select();
             document.execCommand('copy');
             DOM.connectionStatus.innerHTML = '✅ Ответ скопирован! Отправьте создателю комнаты';
         };
         
-        DOM.createRoomBtn.onclick = createRoom;
-        DOM.acceptInviteBtn.onclick = acceptInvite;
-        DOM.sendAnswerToFriendBtn.onclick = sendAnswerToFriend;
-        
-        DOM.onlineModeBtn.onclick = () => {
-            gameMode = 'online';
-            DOM.menuOverlay.style.display = 'flex';
-            DOM.onlinePanel.classList.add('active');
-            DOM.twoPlayersBtn.style.display = 'none';
-            DOM.botModeBtn.style.display = 'none';
-            DOM.onlineModeBtn.style.display = 'none';
-            DOM.joinArea.style.display = 'block';
-            DOM.inviteDataArea.style.display = 'none';
-        };
+        DOM.submitAnswerBtn.onclick = submitHostAnswer;
+        DOM.submitJoinBtn.onclick = startJoin;
         
         function handleTouch(e) {
             e.preventDefault();
@@ -820,6 +792,18 @@
             DOM.controlsInfo.innerHTML = '🤖 Игра против компьютера - водите пальцем по экрану';
         }
         
+        function startOnlineMode() {
+            gameMode = 'online';
+            DOM.menuOverlay.style.display = 'flex';
+            DOM.onlinePanel.classList.add('active');
+            DOM.twoPlayersBtn.style.display = 'none';
+            DOM.botModeBtn.style.display = 'none';
+            DOM.onlineModeBtn.style.display = 'none';
+            DOM.hostArea.style.display = 'none';
+            DOM.joinArea.style.display = 'none';
+            DOM.connectionStatus.innerHTML = '💡 Нажмите "Создать комнату" или "Подключиться"';
+        }
+        
         function backToMenu() {
             if (peerConnection) peerConnection.close();
             gameMode = null;
@@ -829,9 +813,8 @@
             DOM.twoPlayersBtn.style.display = 'flex';
             DOM.botModeBtn.style.display = 'flex';
             DOM.onlineModeBtn.style.display = 'flex';
-            DOM.inviteDataArea.style.display = 'none';
+            DOM.hostArea.style.display = 'none';
             DOM.joinArea.style.display = 'none';
-            DOM.myAnswerArea.style.display = 'none';
             resetGame();
             DOM.controlsInfo.innerHTML = '🎮 Выберите режим в меню';
         }
@@ -851,9 +834,10 @@
         
         DOM.twoPlayersBtn.onclick = startTwoPlayers;
         DOM.botModeBtn.onclick = startBotMode;
+        DOM.onlineModeBtn.onclick = startOnlineMode;
         DOM.backToMenuBtn.onclick = backToMenu;
         
         gameLoop();
     </script>
 </body>
-  </html>
+</html>
