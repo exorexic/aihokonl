@@ -2,853 +2,268 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>🏒 PUCK MASTER - Настольный хоккей</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>P2P Аэрохоккей</title>
+    <script src="https://unpkg.com/peerjs@1.5.1/dist/peerjs.min.js"></script>
     <style>
-        * {
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
-            box-sizing: border-box;
-        }
-
-        body {
-            margin: 0;
-            min-height: 100vh;
-            background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: 'Segoe UI', 'Arial', sans-serif;
-            padding: 10px;
-            position: fixed;
-            width: 100%;
-            height: 100%;
-        }
-
-        .game-container {
-            background: linear-gradient(145deg, rgba(0,0,0,0.5), rgba(0,0,0,0.3));
-            border-radius: 30px;
-            padding: 15px;
-            backdrop-filter: blur(8px);
-            width: 100%;
-            max-width: 1000px;
-        }
-
-        canvas {
-            display: block;
-            margin: 0 auto;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-            width: 100%;
-            height: auto;
-            cursor: none;
-        }
-
-        .score-board {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            gap: 10px;
-        }
-
-        .score-card {
-            background: linear-gradient(135deg, rgba(0,0,0,0.8), rgba(0,0,0,0.6));
-            backdrop-filter: blur(10px);
-            padding: 10px 20px;
-            border-radius: 25px;
-            text-align: center;
-            flex: 1;
-            border: 1px solid rgba(255,215,0,0.3);
-        }
-
-        .score-label {
-            font-size: 12px;
-            color: #ffd966;
-        }
-
-        .score-value {
-            font-size: 42px;
-            font-weight: bold;
-            margin-top: 5px;
-        }
-
-        .score-left .score-value { color: #ff6b6b; }
-        .score-right .score-value { color: #4ecdc4; }
-
-        .vs-badge {
-            background: linear-gradient(135deg, rgba(255,215,0,0.9), rgba(255,165,0,0.9));
-            padding: 10px 20px;
-            border-radius: 50px;
-            font-size: 20px;
-            font-weight: bold;
-            color: #1a2a3a;
-        }
-
-        .menu-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, rgba(15,32,39,0.98), rgba(44,83,100,0.98));
-            backdrop-filter: blur(20px);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            overflow-y: auto;
-        }
-
-        .menu-container {
-            background: linear-gradient(135deg, #1e2f3a, #0f1a22);
-            border-radius: 50px;
-            padding: 25px 20px;
-            max-width: 500px;
-            width: 90%;
-            text-align: center;
-            border: 1px solid rgba(255,215,0,0.3);
-        }
-
-        .menu-container h1 {
-            font-size: 42px;
-            margin: 0 0 5px 0;
-            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #ffd966);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-        }
-
-        .mode-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin: 15px 0;
-        }
-
-        .mode-btn {
-            width: 100%;
-            padding: 14px;
-            font-size: 18px;
-            font-weight: bold;
-            border: none;
-            border-radius: 60px;
-            cursor: pointer;
-            transition: all 0.3s;
-            color: white;
-        }
-
-        .mode-btn.two-players {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-        }
-
-        .mode-btn.bot {
-            background: linear-gradient(135deg, #4facfe, #00f2fe);
-        }
-
-        .mode-btn.online {
-            background: linear-gradient(135deg, #f093fb, #f5576c);
-        }
-
-        .mode-btn:active {
-            transform: scale(0.97);
-        }
-
-        .online-panel {
-            background: rgba(0,0,0,0.5);
-            border-radius: 20px;
-            padding: 12px;
-            margin-top: 12px;
-            display: none;
-        }
-
-        .online-panel.active {
-            display: block;
-        }
-
-        .data-box {
-            margin: 10px 0;
-        }
-
-        textarea {
-            width: 100%;
-            padding: 10px;
-            border-radius: 15px;
-            background: rgba(0,0,0,0.8);
-            color: #4ecdc4;
-            font-family: monospace;
-            font-size: 10px;
-            border: 1px solid #ffd966;
-            resize: vertical;
-            margin: 5px 0;
-        }
-
-        button.small {
-            padding: 8px 15px;
-            font-size: 12px;
-            margin: 5px;
-        }
-
-        .status {
-            margin-top: 10px;
-            padding: 8px;
-            border-radius: 15px;
-            background: rgba(0,0,0,0.5);
-            font-size: 11px;
-        }
-
-        .status.connected {
-            background: rgba(76,175,80,0.3);
-            color: #4caf50;
-        }
-
-        .status.waiting {
-            background: rgba(255,152,0,0.3);
-            color: #ff9800;
-        }
-
-        .controls-info {
-            text-align: center;
-            margin-top: 12px;
-            color: rgba(255,255,255,0.9);
-            font-size: 11px;
-            background: linear-gradient(135deg, rgba(0,0,0,0.5), rgba(0,0,0,0.3));
-            padding: 8px;
-            border-radius: 50px;
-        }
-
-        .back-btn {
-            margin-top: 10px;
-            padding: 6px 16px;
-            background: linear-gradient(135deg, rgba(0,0,0,0.6), rgba(0,0,0,0.4));
-            border: 1px solid rgba(255,215,0,0.5);
-            border-radius: 50px;
-            color: #ffd966;
-            cursor: pointer;
-            width: 100%;
-            font-size: 13px;
-        }
-
-        .mode-selector {
-            display: flex;
-            gap: 8px;
-            margin: 10px 0;
-        }
-
-        .mode-selector button {
-            flex: 1;
-            background: rgba(255,255,255,0.2);
-        }
-
-        .mode-selector button.active {
-            background: #ff9800;
-        }
-
-        @media (max-width: 700px) {
-            .score-value { font-size: 28px; }
-            .menu-container h1 { font-size: 32px; }
-            .mode-btn { padding: 10px; font-size: 16px; }
-        }
+        body { margin: 0; padding: 0; background: #222; color: white; font-family: sans-serif; overflow: hidden; display: flex; flex-direction: column; align-items: center; }
+        canvas { background: #e0f7fa; border: 2px solid #00acc1; max-width: 100%; display: none; touch-action: none; }
+        #menu { padding: 20px; text-align: center; }
+        .btn { padding: 10px 20px; margin: 10px; background: #00acc1; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; }
+        .char-select { margin: 20px 0; }
+        #online-ui { display: none; margin-top: 20px; border-top: 1px solid #555; padding-top: 20px; }
+        input { padding: 10px; margin-bottom: 10px; border-radius: 5px; border: none; }
     </style>
 </head>
 <body>
-    <div class="game-container">
-        <div class="score-board">
-            <div class="score-card score-left">
-                <div class="score-label" id="leftLabel">🔴 ИГРОК</div>
-                <div class="score-value" id="scoreLeft">0</div>
-            </div>
-            <div class="vs-badge">🏒 VS 🏒</div>
-            <div class="score-card score-right">
-                <div class="score-label" id="rightLabel">🔵 СОПЕРНИК</div>
-                <div class="score-value" id="scoreRight">0</div>
-            </div>
-        </div>
-        
-        <canvas id="gameCanvas" width="1000" height="600"></canvas>
-        
-        <button class="back-btn" id="backToMenuBtn">🏠 Главное меню</button>
-        
-        <div class="controls-info" id="controlsInfo">
-            🎮 Выберите режим в меню
-        </div>
+
+<div id="menu">
+    <h1>Аэрохоккей</h1>
+    
+    <div class="char-select">
+        <h3>Выбери класс:</h3>
+        <label><input type="radio" name="char" value="light"> Ловкач (быстрый, маленький)</label><br>
+        <label><input type="radio" name="char" value="normal" checked> Сбалансированный</label><br>
+        <label><input type="radio" name="char" value="tank"> Танк (медленный, огромный)</label>
     </div>
 
-    <div class="menu-overlay" id="menuOverlay">
-        <div class="menu-container">
-            <h1>🏒 PUCK MASTER</h1>
-            <div style="font-size: 11px; color:#aaa;">Настольный хоккей с аватарками</div>
-            
-            <div class="mode-buttons">
-                <button class="mode-btn two-players" id="twoPlayersBtn">👥 2 игрока (на одном телефоне)</button>
-                <button class="mode-btn bot" id="botModeBtn">🤖 Игра с ботом</button>
-                <button class="mode-btn online" id="onlineModeBtn">🌐 Онлайн игра</button>
-            </div>
-            
-            <div id="onlinePanel" class="online-panel">
-                <div class="mode-selector">
-                    <button id="hostModeBtn" class="active">🔴 СОЗДАТЬ КОМНАТУ</button>
-                    <button id="guestModeBtn">🟢 ПОДКЛЮЧИТЬСЯ</button>
-                </div>
-                
-                <div id="hostSection">
-                    <div class="status waiting">📋 Ваше приглашение (отправьте другу):</div>
-                    <textarea id="offerText" rows="3" readonly></textarea>
-                    <button id="copyOfferBtn" class="small">📋 Копировать</button>
-                    
-                    <div id="answerSection" style="display:none;">
-                        <div class="status waiting" style="margin-top:10px;">📥 Вставьте ответ друга:</div>
-                        <textarea id="answerInput" rows="3" placeholder="Вставьте ответ друга..."></textarea>
-                        <button id="submitAnswerBtn">✅ Подключиться</button>
-                    </div>
-                </div>
-                
-                <div id="guestSection" style="display:none;">
-                    <div class="status waiting">📥 Вставьте приглашение от друга:</div>
-                    <textarea id="offerInput" rows="3" placeholder="Вставьте приглашение..."></textarea>
-                    <button id="submitOfferBtn">✅ Принять</button>
-                    
-                    <div id="sendAnswerSection" style="display:none; margin-top:10px;">
-                        <div class="status waiting">📤 Отправьте этот ответ другу:</div>
-                        <textarea id="answerOutput" rows="3" readonly></textarea>
-                        <button id="copyAnswerBtn" class="small">📋 Копировать</button>
-                    </div>
-                </div>
-                
-                <div id="onlineStatus" class="status waiting">💡 Выберите действие</div>
-            </div>
-        </div>
-    </div>
+    <button class="btn" onclick="startGame('bot')">Играть с Ботом</button>
+    <button class="btn" onclick="showOnlineUI()">Играть Онлайн (P2P)</button>
 
-    <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
+    <div id="online-ui">
+        <p>Ваш ID: <span id="my-id">Загрузка...</span></p>
+        <input type="text" id="peer-id-input" placeholder="Введите ID друга">
+        <br>
+        <button class="btn" onclick="connectToPeer()">Подключиться к другу</button>
+    </div>
+</div>
+
+<canvas id="gameCanvas" width="400" height="600"></canvas>
+
+<script>
+    // --- НАСТРОЙКИ КЛАССОВ ---
+    const classes = {
+        light: { radius: 20, maxSpeed: 8, color: '#ff5252' },
+        normal: { radius: 30, maxSpeed: 6, color: '#448aff' },
+        tank: { radius: 45, maxSpeed: 4, color: '#4caf50' }
+    };
+
+    // --- ИГРОВЫЕ ПЕРЕМЕННЫЕ ---
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    let gameLoop;
+    let mode = ''; // 'bot' или 'p2p'
+    let isHost = true; // Для P2P: хост считает физику
+
+    // Игровые объекты
+    let p1 = { x: 200, y: 500, radius: 30, color: 'blue', vx: 0, vy: 0, score: 0 };
+    let p2 = { x: 200, y: 100, radius: 30, color: 'red', vx: 0, vy: 0, score: 0 };
+    let puck = { x: 200, y: 300, radius: 15, vx: 0, vy: 0, speedLimit: 15 };
+
+    // --- УПРАВЛЕНИЕ P2P (PeerJS) ---
+    let peer, conn;
+    
+    function initPeer() {
+        peer = new Peer(); // Создаем подключение к бесплатному сигнальному серверу PeerJS
+        peer.on('open', id => document.getElementById('my-id').innerText = id);
         
-        const W = 1000;
-        const H = 600;
-        const PADDLE_RADIUS = 45;
-        const PUCK_RADIUS = 14;
-        const GOAL_WIDTH = 110;
-        const GOAL_HEIGHT = 22;
-        
-        let gameMode = null;
-        let gameActive = true;
-        
-        const avatars = ['🐱', '🐶', '🐼', '🦊', '🐻', '🐨', '🦁', '🐸', '🐒', '🐧', '🦉', '🐺'];
-        const player1Avatar = avatars[Math.floor(Math.random() * avatars.length)];
-        const player2Avatar = avatars[Math.floor(Math.random() * avatars.length)];
-        
-        let player1 = { x: 120, y: H/2, radius: PADDLE_RADIUS, avatar: player1Avatar };
-        let player2 = { x: W - 120, y: H/2, radius: PADDLE_RADIUS, avatar: player2Avatar };
-        let puck = { x: W/2, y: H/2, vx: 0, vy: 0, radius: PUCK_RADIUS };
-        let scores = { left: 0, right: 0 };
-        
-        let touchPoints = { x1: player1.x, y1: player1.y, x2: player2.x, y2: player2.y };
-        
-        // P2P переменные
-        let peerConnection = null;
-        let dataChannel = null;
-        let isHost = false;
-        let connectionActive = false;
-        let isConnecting = false;
-        
-        const DOM = {
-            scoreLeft: document.getElementById('scoreLeft'),
-            scoreRight: document.getElementById('scoreRight'),
-            leftLabel: document.getElementById('leftLabel'),
-            rightLabel: document.getElementById('rightLabel'),
-            menuOverlay: document.getElementById('menuOverlay'),
-            backToMenuBtn: document.getElementById('backToMenuBtn'),
-            twoPlayersBtn: document.getElementById('twoPlayersBtn'),
-            botModeBtn: document.getElementById('botModeBtn'),
-            onlineModeBtn: document.getElementById('onlineModeBtn'),
-            onlinePanel: document.getElementById('onlinePanel'),
-            onlineStatus: document.getElementById('onlineStatus'),
-            hostModeBtn: document.getElementById('hostModeBtn'),
-            guestModeBtn: document.getElementById('guestModeBtn'),
-            hostSection: document.getElementById('hostSection'),
-            guestSection: document.getElementById('guestSection'),
-            offerText: document.getElementById('offerText'),
-            copyOfferBtn: document.getElementById('copyOfferBtn'),
-            answerSection: document.getElementById('answerSection'),
-            answerInput: document.getElementById('answerInput'),
-            submitAnswerBtn: document.getElementById('submitAnswerBtn'),
-            offerInput: document.getElementById('offerInput'),
-            submitOfferBtn: document.getElementById('submitOfferBtn'),
-            sendAnswerSection: document.getElementById('sendAnswerSection'),
-            answerOutput: document.getElementById('answerOutput'),
-            copyAnswerBtn: document.getElementById('copyAnswerBtn'),
-            controlsInfo: document.getElementById('controlsInfo')
-        };
-        
-        function updateScoreDisplay() {
-            DOM.scoreLeft.textContent = scores.left;
-            DOM.scoreRight.textContent = scores.right;
-        }
-        
-        function resetPuck() {
-            puck.x = W/2;
-            puck.y = H/2;
-            let angle = Math.random() * Math.PI * 2;
-            let speed = 5;
-            puck.vx = Math.cos(angle) * speed;
-            puck.vy = Math.sin(angle) * speed;
-            if (Math.abs(puck.vx) < 2) puck.vx = puck.vx > 0 ? 3 : -3;
-            if (Math.abs(puck.vy) < 1.5) puck.vy = puck.vy > 0 ? 2 : -2;
-            if (gameMode === 'online' && connectionActive && !isHost) sendGameState();
-        }
-        
-        function resetGame() {
-            scores = { left: 0, right: 0 };
-            updateScoreDisplay();
-            player1.x = 120;
-            player1.y = H/2;
-            player2.x = W - 120;
-            player2.y = H/2;
-            resetPuck();
-            gameActive = true;
-        }
-        
-        function circlesCollide(x1, y1, r1, x2, y2, r2) {
-            return Math.hypot(x1 - x2, y1 - y2) < r1 + r2;
-        }
-        
-        function handleCollision(paddle, puck) {
-            if (circlesCollide(paddle.x, paddle.y, paddle.radius, puck.x, puck.y, puck.radius)) {
-                const dx = puck.x - paddle.x;
-                const dy = puck.y - paddle.y;
-                const angle = Math.atan2(dy, dx);
-                const speed = Math.hypot(puck.vx, puck.vy);
-                const newSpeed = Math.min(12, speed + 1.5);
-                puck.vx = Math.cos(angle) * newSpeed;
-                puck.vy = Math.sin(angle) * newSpeed;
-                if (paddle.vx) {
-                    puck.vx += paddle.vx * 0.5;
-                    puck.vy += paddle.vy * 0.5;
-                }
-                puck.x = paddle.x + Math.cos(angle) * (paddle.radius + puck.radius + 2);
-                puck.y = paddle.y + Math.sin(angle) * (paddle.radius + puck.radius + 2);
-                return true;
+        // Если кто-то подключается к нам
+        peer.on('connection', connection => {
+            conn = connection;
+            isHost = true; // Хост считает физику шайбы
+            setupConnection();
+            startGame('p2p');
+        });
+    }
+    
+    function showOnlineUI() {
+        document.getElementById('online-ui').style.display = 'block';
+        if (!peer) initPeer();
+    }
+
+    function connectToPeer() {
+        const id = document.getElementById('peer-id-input').value;
+        if (!id) return;
+        conn = peer.connect(id);
+        isHost = false; // Клиент просто шлет свои координаты и получает данные шайбы
+        setupConnection();
+        startGame('p2p');
+    }
+
+    function setupConnection() {
+        conn.on('data', data => {
+            if (isHost) {
+                // Хост получает позицию клиента (P2)
+                p2.x = 400 - data.x; // Зеркалим координаты для соперника
+                p2.y = 600 - data.y;
+            } else {
+                // Клиент получает позицию хоста (P2), шайбы и счет
+                p2.x = 400 - data.p1.x;
+                p2.y = 600 - data.p1.y;
+                puck.x = 400 - data.puck.x;
+                puck.y = 600 - data.puck.y;
+                p1.score = data.score2;
+                p2.score = data.score1;
             }
-            return false;
-        }
+        });
+    }
+
+    // --- ЛОГИКА ИГРЫ ---
+    function startGame(selectedMode) {
+        mode = selectedMode;
+        const charChoice = document.querySelector('input[name="char"]:checked').value;
         
-        function checkGoal() {
-            const leftGoalY = H/2 - GOAL_WIDTH/2;
-            const rightGoalY = H/2 - GOAL_WIDTH/2;
+        // Применяем характеристики
+        p1.radius = classes[charChoice].radius;
+        p1.color = classes[charChoice].color;
+        // Для бота задаем стандартные характеристики
+        p2.radius = classes['normal'].radius; 
+
+        document.getElementById('menu').style.display = 'none';
+        canvas.style.display = 'block';
+
+        // Управление (Мышь / Тач)
+        canvas.addEventListener('touchmove', handleMove);
+        canvas.addEventListener('mousemove', handleMove);
+
+        resetPuck();
+        update();
+    }
+
+    function handleMove(e) {
+        e.preventDefault();
+        let rect = canvas.getBoundingClientRect();
+        let clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        let clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        
+        let scaleX = canvas.width / rect.width;
+        let scaleY = canvas.height / rect.height;
+
+        let newX = (clientX - rect.left) * scaleX;
+        let newY = (clientY - rect.top) * scaleY;
+
+        // Ограничиваем движение своей половиной поля (низ)
+        p1.x = Math.max(p1.radius, Math.min(canvas.width - p1.radius, newX));
+        p1.y = Math.max(canvas.height / 2 + p1.radius, Math.min(canvas.height - p1.radius, newY));
+    }
+
+    function resetPuck() {
+        puck.x = canvas.width / 2;
+        puck.y = canvas.height / 2;
+        puck.vx = 0;
+        puck.vy = 0;
+    }
+
+    function resolveCollision(player, pck) {
+        let dx = pck.x - player.x;
+        let dy = pck.y - player.y;
+        let distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance < player.radius + pck.radius) {
+            let angle = Math.atan2(dy, dx);
+            // Сила удара (базовая + отскок)
+            let force = 7; 
+            pck.vx = Math.cos(angle) * force;
+            pck.vy = Math.sin(angle) * force;
             
-            if (puck.x - puck.radius <= GOAL_HEIGHT && puck.y + puck.radius > leftGoalY && puck.y - puck.radius < leftGoalY + GOAL_WIDTH) {
-                scores.right++;
-                updateScoreDisplay();
-                resetPuck();
-                return true;
-            }
-            if (puck.x + puck.radius >= W - GOAL_HEIGHT && puck.y + puck.radius > rightGoalY && puck.y - puck.radius < rightGoalY + GOAL_WIDTH) {
-                scores.left++;
-                updateScoreDisplay();
-                resetPuck();
-                return true;
-            }
-            return false;
+            // Выталкиваем шайбу из игрока, чтобы не застревала
+            pck.x = player.x + Math.cos(angle) * (player.radius + pck.radius);
+            pck.y = player.y + Math.sin(angle) * (player.radius + pck.radius);
         }
-        
-        function updatePhysics() {
-            if (!gameActive) return;
+    }
+
+    function update() {
+        if (isHost || mode === 'bot') {
+            // Физика шайбы (считает только хост или одиночная игра)
             puck.x += puck.vx;
             puck.y += puck.vy;
-            
-            if (puck.y - puck.radius <= 0) { puck.y = puck.radius; puck.vy = -puck.vy * 0.98; }
-            if (puck.y + puck.radius >= H) { puck.y = H - puck.radius; puck.vy = -puck.vy * 0.98; }
-            
-            const leftGoalY = H/2 - GOAL_WIDTH/2;
-            const rightGoalY = H/2 - GOAL_WIDTH/2;
-            
-            if (puck.x - puck.radius <= 0 && !(puck.y + puck.radius > leftGoalY && puck.y - puck.radius < leftGoalY + GOAL_WIDTH)) {
-                puck.x = puck.radius; puck.vx = -puck.vx * 0.9;
+            puck.vx *= 0.99; // Трение
+            puck.vy *= 0.99;
+
+            // Отскок шайбы от стен
+            if (puck.x - puck.radius < 0 || puck.x + puck.radius > canvas.width) {
+                puck.vx *= -1;
+                puck.x = puck.x - puck.radius < 0 ? puck.radius : canvas.width - puck.radius;
             }
-            if (puck.x + puck.radius >= W && !(puck.y + puck.radius > rightGoalY && puck.y - puck.radius < rightGoalY + GOAL_WIDTH)) {
-                puck.x = W - puck.radius; puck.vx = -puck.vx * 0.9;
-            }
-            
-            handleCollision(player1, puck);
-            handleCollision(player2, puck);
-            checkGoal();
-            
-            const maxSpeed = 12;
-            if (Math.abs(puck.vx) > maxSpeed) puck.vx = puck.vx > 0 ? maxSpeed : -maxSpeed;
-            if (Math.abs(puck.vy) > maxSpeed) puck.vy = puck.vy > 0 ? maxSpeed : -maxSpeed;
-            puck.vx *= 0.998;
-            puck.vy *= 0.998;
-        }
-        
-        function updateBot() {
-            if (gameMode !== 'bot') return;
-            let targetY = puck.y;
-            if (puck.vx > 0 && puck.x > W/2) targetY = puck.y + puck.vy * 12;
-            targetY = Math.max(PADDLE_RADIUS, Math.min(H - PADDLE_RADIUS, targetY));
-            player2.y += (targetY - player2.y) * 0.1;
-        }
-        
-        function updatePlayers() {
-            if (gameMode === 'twoPlayers') {
-                player1.x += (touchPoints.x1 - player1.x) * 0.3;
-                player1.y += (touchPoints.y1 - player1.y) * 0.3;
-                player2.x += (touchPoints.x2 - player2.x) * 0.3;
-                player2.y += (touchPoints.y2 - player2.y) * 0.3;
-            } else if (gameMode === 'bot') {
-                player1.x += (touchPoints.x1 - player1.x) * 0.3;
-                player1.y += (touchPoints.y1 - player1.y) * 0.3;
-                updateBot();
-            } else if (gameMode === 'online' && connectionActive) {
-                if (isHost) {
-                    player1.x += (touchPoints.x1 - player1.x) * 0.3;
-                    player1.y += (touchPoints.y1 - player1.y) * 0.3;
-                    sendPaddlePosition();
+            if (puck.y - puck.radius < 0 || puck.y + puck.radius > canvas.height) {
+                // Гол? Ворота (по центру)
+                if (puck.x > 120 && puck.x < 280) {
+                    if (puck.y < 0) { p1.score++; resetPuck(); }
+                    else if (puck.y > canvas.height) { p2.score++; resetPuck(); }
                 } else {
-                    player2.x += (touchPoints.x2 - player2.x) * 0.3;
-                    player2.y += (touchPoints.y2 - player2.y) * 0.3;
-                    sendPaddlePosition();
+                    puck.vy *= -1;
+                    puck.y = puck.y - puck.radius < 0 ? puck.radius : canvas.height - puck.radius;
                 }
             }
-            
-            player1.x = Math.max(60 + PADDLE_RADIUS, Math.min(W/2 - 50, player1.x));
-            player1.y = Math.max(PADDLE_RADIUS, Math.min(H - PADDLE_RADIUS, player1.y));
-            player2.x = Math.max(W/2 + 50, Math.min(W - 60 - PADDLE_RADIUS, player2.x));
-            player2.y = Math.max(PADDLE_RADIUS, Math.min(H - PADDLE_RADIUS, player2.y));
-            
-            player1.vx = player1.x - (player1.prevX || player1.x);
-            player1.vy = player1.y - (player1.prevY || player1.y);
-            player2.vx = player2.x - (player2.prevX || player2.x);
-            player2.vy = player2.y - (player2.prevY || player2.y);
-            player1.prevX = player1.x; player1.prevY = player1.y;
-            player2.prevX = player2.x; player2.prevY = player2.y;
-        }
-        
-        function draw() {
-            const iceGrad = ctx.createLinearGradient(0, 0, 0, H);
-            iceGrad.addColorStop(0, '#4a9eff');
-            iceGrad.addColorStop(0.5, '#2c7ad0');
-            iceGrad.addColorStop(1, '#0f3a70');
-            ctx.fillStyle = iceGrad;
-            ctx.fillRect(0, 0, W, H);
-            
-            for(let i = 0; i < 100; i++) {
-                ctx.fillStyle = `rgba(255,255,255,${Math.random() * 0.2})`;
-                ctx.fillRect(Math.random() * W, Math.random() * H, 2, 2);
-            }
-            
-            ctx.beginPath();
-            ctx.strokeStyle = 'white';
-            ctx.lineWidth = 5;
-            ctx.setLineDash([15, 25]);
-            ctx.moveTo(W/2, 0);
-            ctx.lineTo(W/2, H);
-            ctx.stroke();
-            ctx.setLineDash([]);
-            
-            ctx.beginPath();
-            ctx.arc(W/2, H/2, 90, 0, Math.PI * 2);
-            ctx.strokeStyle = 'white';
-            ctx.stroke();
-            
-            ctx.fillStyle = '#2c3e50';
-            ctx.fillRect(0, H/2 - GOAL_WIDTH/2, GOAL_HEIGHT, GOAL_WIDTH);
-            ctx.fillRect(W - GOAL_HEIGHT, H/2 - GOAL_WIDTH/2, GOAL_HEIGHT, GOAL_WIDTH);
-            ctx.fillStyle = '#e74c3c';
-            ctx.fillRect(2, H/2 - GOAL_WIDTH/2 + 5, GOAL_HEIGHT - 4, GOAL_WIDTH - 10);
-            ctx.fillStyle = '#2ecc71';
-            ctx.fillRect(W - GOAL_HEIGHT + 2, H/2 - GOAL_WIDTH/2 + 5, GOAL_HEIGHT - 4, GOAL_WIDTH - 10);
-            
-            ctx.shadowBlur = 12;
-            const grad1 = ctx.createRadialGradient(player1.x-12, player1.y-12, 8, player1.x, player1.y, PADDLE_RADIUS);
-            grad1.addColorStop(0, '#ff8a8a');
-            grad1.addColorStop(1, '#c0392b');
-            ctx.fillStyle = grad1;
-            ctx.beginPath();
-            ctx.arc(player1.x, player1.y, PADDLE_RADIUS, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.font = `${PADDLE_RADIUS * 0.65}px "Segoe UI Emoji"`;
-            ctx.fillStyle = 'white';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(player1.avatar, player1.x, player1.y);
-            
-            const grad2 = ctx.createRadialGradient(player2.x-12, player2.y-12, 8, player2.x, player2.y, PADDLE_RADIUS);
-            grad2.addColorStop(0, '#6edcd4');
-            grad2.addColorStop(1, '#2c7a6e');
-            ctx.fillStyle = grad2;
-            ctx.beginPath();
-            ctx.arc(player2.x, player2.y, PADDLE_RADIUS, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = 'white';
-            ctx.fillText(player2.avatar, player2.x, player2.y);
-            
-            ctx.fillStyle = '#2c3e50';
-            ctx.beginPath();
-            ctx.arc(puck.x, puck.y, PUCK_RADIUS, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = '#ecf0f1';
-            ctx.beginPath();
-            ctx.arc(puck.x-3, puck.y-3, 4, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.shadowBlur = 0;
-            
-            ctx.font = 'bold 16px "Segoe UI"';
-            ctx.fillStyle = '#ffd966';
-            ctx.fillText('🏒 PUCK MASTER', 20, 40);
-            ctx.font = '12px "Segoe UI"';
-            ctx.fillStyle = 'white';
-            if (gameMode === 'twoPlayers') ctx.fillText('👥 2 игрока', 20, 65);
-            else if (gameMode === 'bot') ctx.fillText('🤖 Игрок VS Бот', 20, 65);
-            else if (gameMode === 'online') ctx.fillText(connectionActive ? '🌐 Онлайн - соединено' : '🌐 Онлайн - ожидание', 20, 65);
-        }
-        
-        // P2P функции
-        async function createPeerConnection(isInitiator) {
-            const config = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
-            peerConnection = new RTCPeerConnection(config);
-            
-            peerConnection.onicecandidate = (event) => {
-                if (event.candidate) {
-                    console.log('ICE кандидат');
-                }
-            };
-            
-            peerConnection.onconnectionstatechange = () => {
-                if (peerConnection.connectionState === 'connected') {
-                    connectionActive = true;
-                    DOM.onlineStatus.className = 'status connected';
-                    DOM.onlineStatus.innerHTML = '✅ Соединение установлено! Игра началась!';
-                    gameActive = true;
-                    resetPuck();
-                    setTimeout(() => { DOM.menuOverlay.style.display = 'none'; }, 1000);
-                } else if (peerConnection.connectionState === 'failed') {
-                    DOM.onlineStatus.innerHTML = '❌ Ошибка соединения. Попробуйте ещё раз.';
-                    isConnecting = false;
-                }
-            };
-            
-            return peerConnection;
-        }
-        
-        function setupDataChannel() {
-            dataChannel.onopen = () => {
-                if (!isHost) sendGameState();
-            };
-            dataChannel.onmessage = (event) => {
-                const data = JSON.parse(event.data);
-                if (data.type === 'paddle') {
-                    if (isHost) player2.y = data.y;
-                    else player1.y = data.y;
-                } else if (data.type === 'state') {
-                    puck = data.puck;
-                    scores = data.scores;
-                    updateScoreDisplay();
-                }
-            };
-        }
-        
-        function sendPaddlePosition() {
-            if (dataChannel && dataChannel.readyState === 'open') {
-                dataChannel.send(JSON.stringify({ type: 'paddle', y: isHost ? player1.y : player2.y }));
+
+            // Столкновения
+            resolveCollision(p1, puck);
+            resolveCollision(p2, puck);
+
+            // Логика бота
+            if (mode === 'bot') {
+                let targetX = puck.y < canvas.height / 2 ? puck.x : canvas.width / 2;
+                p2.x += (targetX - p2.x) * 0.1; // Скорость реакции
+                // Ограничение бота в верхней половине
+                p2.y = 100; // Держится на одной линии (для простоты)
             }
         }
-        
-        function sendGameState() {
-            if (dataChannel && dataChannel.readyState === 'open' && !isHost) {
-                dataChannel.send(JSON.stringify({ type: 'state', puck: puck, scores: scores }));
+
+        // Обмен данными P2P
+        if (mode === 'p2p' && conn && conn.open) {
+            if (isHost) {
+                conn.send({ p1: p1, puck: puck, score1: p1.score, score2: p2.score });
+            } else {
+                conn.send({ x: p1.x, y: p1.y }); // Клиент шлет только свою позицию
             }
         }
-        
-        async function startHost() {
-            if (isConnecting) return;
-            isConnecting = true;
-            isHost = true;
-            
-            await createPeerConnection(true);
-            dataChannel = peerConnection.createDataChannel('hockey');
-            setupDataChannel();
-            
-            const offer = await peerConnection.createOffer();
-            await peerConnection.setLocalDescription(offer);
-            
-            DOM.offerText.value = JSON.stringify(peerConnection.localDescription);
-            DOM.answerSection.style.display = 'block';
-            DOM.onlineStatus.innerHTML = '📤 Отправьте приглашение другу';
-            isConnecting = false;
-        }
-        
-        async function submitAnswer() {
-            const answerText = DOM.answerInput.value;
-            if (!answerText) {
-                DOM.onlineStatus.innerHTML = '⚠️ Вставьте ответ друга!';
-                return;
-            }
-            
-            try {
-                const answer = JSON.parse(answerText);
-                await peerConnection.setRemoteDescription(answer);
-                DOM.onlineStatus.innerHTML = '🟢 Подключение...';
-            } catch(e) {
-                DOM.onlineStatus.innerHTML = '❌ Ошибка: неверный формат ответа';
-            }
-        }
-        
-        async function startGuest() {
-            if (isConnecting) return;
-            isConnecting = true;
-            isHost = false;
-            
-            const offerText = DOM.offerInput.value;
-            if (!offerText) {
-                DOM.onlineStatus.innerHTML = '⚠️ Вставьте приглашение друга!';
-                isConnecting = false;
-                return;
-            }
-            
-            await createPeerConnection(false);
-            
-            peerConnection.ondatachannel = (event) => {
-                dataChannel = event.channel;
-                setupDataChannel();
-            };
-            
-            try {
-                const offer = JSON.parse(offerText);
-                await peerConnection.setRemoteDescription(offer);
-                const answer = await peerConnection.createAnswer();
-                await peerConnection.setLocalDescription(answer);
-                
-                DOM.answerOutput.value = JSON.stringify(peerConnection.localDescription);
-                DOM.sendAnswerSection.style.display = 'block';
-                DOM.onlineStatus.innerHTML = '📤 Отправьте этот ответ другу';
-            } catch(e) {
-                DOM.onlineStatus.innerHTML = '❌ Ошибка: неверный формат приглашения';
-            }
-            isConnecting = false;
-        }
-        
-        DOM.copyOfferBtn.onclick = () => {
-            DOM.offerText.select();
-            document.execCommand('copy');
-            DOM.onlineStatus.innerHTML = '✅ Приглашение скопировано! Отправьте другу';
-        };
-        
-        DOM.copyAnswerBtn.onclick = () => {
-            DOM.answerOutput.select();
-            document.execCommand('copy');
-            DOM.onlineStatus.innerHTML = '✅ Ответ скопирован! Отправьте создателю комнаты';
-        };
-        
-        DOM.submitAnswerBtn.onclick = submitAnswer;
-        DOM.submitOfferBtn.onclick = startGuest;
-        
-        DOM.hostModeBtn.onclick = () => {
-            DOM.hostModeBtn.classList.add('active');
-            DOM.guestModeBtn.classList.remove('active');
-            DOM.hostSection.style.display = 'block';
-            DOM.guestSection.style.display = 'none';
-            DOM.onlineStatus.innerHTML = '📋 Создайте приглашение для друга';
-        };
-        
-        DOM.guestModeBtn.onclick = () => {
-            DOM.guestModeBtn.classList.add('active');
-            DOM.hostModeBtn.classList.remove('active');
-            DOM.hostSection.style.display = 'none';
-            DOM.guestSection.style.display = 'block';
-            DOM.onlineStatus.innerHTML = '📥 Вставьте приглашение от друга';
-        };
-        
-        function handleTouch(e) {
-            e.preventDefault();
-            const rect = canvas.getBoundingClientRect();
-            const scaleX = W / rect.width;
-            const scaleY = H / rect.height;
-            
-            for(let i = 0; i < e.touches.length; i++) {
-                const touch = e.touches[i];
-                let canvasX = (touch.clientX - rect.left) * scaleX;
-                let canvasY = (touch.clientY - rect.top) * scaleY;
-                canvasX = Math.max(0, Math.min(W, canvasX));
-                canvasY = Math.max(0, Math.min(H, canvasY));
-                
-                if (gameMode === 'twoPlayers') {
-                    if (canvasX < W/2) { touchPoints.x1 = canvasX; touchPoints.y1 = canvasY; }
-                    else { touchPoints.x2 = canvasX; touchPoints.y2 = canvasY; }
-                } else if (gameMode === 'bot') {
-                    touchPoints.x1 = canvasX; touchPoints.y1 = canvasY;
-                } else if (gameMode === 'online' && connectionActive) {
-                    if (isHost) { touchPoints.x1 = canvasX; touchPoints.y1 = canvasY; }
-                    else { touchPoints.x2 = canvasX; touchPoints.y2 = canvasY; }
-                }
-            }
-        }
-        
-        function startTwoPlayers() {
-            gameMode = 'twoPlayers';
-            DOM.leftLabel.innerHTML = '🔴 ИГРОК 1';
-            DOM.rightLabel.innerHTML = '🔵 ИГРОК 2';
-            resetGame();
-            DOM.menuOverlay.style.display = 'none';
-            DOM.controlsInfo.innerHTML = '👥 Левая половина - красный | Правая половина - синий';
-        }
-        
-        function startBotMode() {
-            gameMode = 'bot';
-            DOM.leftLabel.innerHTML = '🔴 ИГРОК';
-            DOM.rightLabel.innerHTML = '🤖 БОТ';
-            resetGame();
-            DOM.menuOverlay.style.display = 'none';
-            DOM.controlsInfo.innerHTML = '🤖 Игра против компьютера';
-        }
-        
-        function startOnlineMode() {
-            DOM.menuOverlay.style.display = 'flex';
-            DOM.onlinePanel.classList.add('active');
-            DOM.twoPlayersBtn.style.display = 'none';
-            DOM.botModeBtn.style.display = 'none';
-            DOM.onlineModeBtn.style.display = 'none';
-            DOM.hostModeBtn.click();
-            DOM.controlsInfo.innerHTML = '🌐 Отправьте приглашение другу через мессенджер';
-        }
-        
-        function backToMenu() {
-            if (peerConnection) peerConnection.close();
-            gameMode = null;
-            connectionActive = false;
-            isConnecting = false;
-            DOM.menuOverlay.style.display = 'flex';
-            DOM.onlinePanel.classList.remove('active');
-            DOM.twoPlayersBtn.style.display = 'flex';
-            DOM.botModeBtn.style.display = 'flex';
-            DOM.onlineModeBtn.style.display = 'flex';
-            DOM.answerSection.style.display = 'none';
-            DOM.sendAnswerSection.style.display = 'none';
-            resetGame();
-            DOM.controlsInfo.innerHTML = '🎮 Выберите режим в меню';
-        }
-        
-        function gameLoop() {
-            if (gameMode) {
-                updatePlayers();
-                updatePhysics();
-                draw();
-            }
-            requestAnimationFrame(gameLoop);
-        }
-        
-        canvas.addEventListener('touchstart', handleTouch);
-        canvas.addEventListener('touchmove', handleTouch);
-        canvas.addEventListener('touchend', (e) => e.preventDefault());
-        
-        DOM.twoPlayersBtn.onclick = startTwoPlayers;
-        DOM.botModeBtn.onclick = startBotMode;
-        DOM.onlineModeBtn.onclick = startOnlineMode;
-        DOM.backToMenuBtn.onclick = backToMenu;
-        
-        DOM.hostModeBtn.onclick();
-        
-        gameLoop();
-    </script>
+
+        draw();
+        gameLoop = requestAnimationFrame(update);
+    }
+
+    function draw() {
+        // Очистка и фон
+        ctx.fillStyle = '#e0f7fa';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Центральная линия
+        ctx.beginPath();
+        ctx.moveTo(0, canvas.height / 2);
+        ctx.lineTo(canvas.width, canvas.height / 2);
+        ctx.strokeStyle = '#00acc1';
+        ctx.stroke();
+
+        // Ворота
+        ctx.fillStyle = '#ff5252';
+        ctx.fillRect(120, 0, 160, 10); // Верхние
+        ctx.fillStyle = '#448aff';
+        ctx.fillRect(120, canvas.height - 10, 160, 10); // Нижние
+
+        // Очки
+        ctx.fillStyle = '#555';
+        ctx.font = '40px Arial';
+        ctx.fillText(p2.score, 20, canvas.height / 2 - 20);
+        ctx.fillText(p1.score, 20, canvas.height / 2 + 50);
+
+        // Игрок 1
+        ctx.beginPath();
+        ctx.arc(p1.x, p1.y, p1.radius, 0, Math.PI * 2);
+        ctx.fillStyle = p1.color;
+        ctx.fill();
+
+        // Игрок 2 (или Бот)
+        ctx.beginPath();
+        ctx.arc(p2.x, p2.y, p2.radius, 0, Math.PI * 2);
+        ctx.fillStyle = p2.color;
+        ctx.fill();
+
+        // Шайба
+        ctx.beginPath();
+        ctx.arc(puck.x, puck.y, puck.radius, 0, Math.PI * 2);
+        ctx.fillStyle = '#222';
+        ctx.fill();
+    }
+</script>
 </body>
 </html>
