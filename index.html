@@ -3,74 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>P2P Аэрохоккей</title>
+    <title>Neon P2P Air Hockey</title>
     <script src="https://unpkg.com/peerjs@1.5.1/dist/peerjs.min.js"></script>
     <style>
-        body { margin: 0; padding: 0; background: #222; color: white; font-family: sans-serif; overflow: hidden; display: flex; flex-direction: column; align-items: center; }
-        canvas { background: #e0f7fa; border: 2px solid #00acc1; max-width: 100%; display: none; touch-action: none; }
-        #menu { padding: 20px; text-align: center; }
-        .btn { padding: 10px 20px; margin: 10px; background: #00acc1; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; }
-        .char-select { margin: 20px 0; }
-        #online-ui { display: none; margin-top: 20px; border-top: 1px solid #555; padding-top: 20px; }
-        input { padding: 10px; margin-bottom: 10px; border-radius: 5px; border: none; }
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+        
+        body { margin: 0; padding: 0; background: #0f0f1b; color: #fff; font-family: 'Orbitron', sans-serif; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }
+        
+        /* Красивый интерфейс меню */
+        #menu { background: rgba(20, 20, 35, 0.9); padding: 30px; border-radius: 15px; border: 2px solid #00e5ff; box-shadow: 0 0 20px rgba(0, 229, 255, 0.4); text-align: center; max-width: 90%; width: 400px; z-index: 10; }
+        h1 { color: #00e5ff; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 10px #00e5ff; margin-top: 0; }
+        
+        /* Карточки выбора персонажа */
+        .char-select { display: flex; flex-direction: column; gap: 10px; margin: 20px 0; }
+        .char-label { display: flex; align-items: center; justify-content: space-between; padding: 15px; background: #1a1a2e; border: 1px solid #333; border-radius: 8px; cursor: pointer; transition: 0.3s; }
+        .char-label:hover { background: #252542; }
+        .char-label input { display: none; }
+        .char-label input:checked + .char-info { color: #00e5ff; text-shadow: 0 0 5px #00e5ff; }
+        .char-label:has(input:checked) { border-color: #00e5ff; box-shadow: inset 0 0 10px rgba(0, 229, 255, 0.2); }
+        .char-info { font-weight: bold; font-size: 14px; }
+        
+        /* Кнопки и инпуты */
+        .btn { width: 100%; padding: 15px; margin: 10px 0; background: linear-gradient(45deg, #00e5ff, #0077ff); color: white; border: none; border-radius: 8px; font-size: 16px; font-family: 'Orbitron', sans-serif; font-weight: bold; cursor: pointer; transition: 0.3s; text-transform: uppercase; box-shadow: 0 4px 15px rgba(0, 119, 255, 0.4); }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0, 229, 255, 0.6); }
+        
+        #online-ui { display: none; margin-top: 15px; background: #1a1a2e; padding: 15px; border-radius: 8px; border: 1px solid #ff0055; box-shadow: 0 0 10px rgba(255, 0, 85, 0.2); }
+        .id-display { color: #ff0055; font-size: 18px; text-shadow: 0 0 5px #ff0055; word-break: break-all; margin: 10px 0; }
+        input[type="text"] { width: calc(100% - 20px); padding: 12px; margin-bottom: 10px; border-radius: 5px; border: 1px solid #555; background: #0f0f1b; color: #fff; font-family: 'Orbitron', sans-serif; text-align: center; }
+        input[type="text"]:focus { outline: none; border-color: #ff0055; box-shadow: 0 0 10px rgba(255, 0, 85, 0.4); }
+
+        /* Игровое поле */
+        canvas { background: #080812; border: 3px solid #333; border-radius: 10px; box-shadow: 0 0 30px rgba(0, 229, 255, 0.2); max-width: 100%; display: none; touch-action: none; }
     </style>
 </head>
 <body>
 
 <div id="menu">
-    <h1>Аэрохоккей</h1>
+    <h1>Neon Hockey</h1>
     
     <div class="char-select">
-        <h3>Выбери класс:</h3>
-        <label><input type="radio" name="char" value="light"> Ловкач (быстрый, маленький)</label><br>
-        <label><input type="radio" name="char" value="normal" checked> Сбалансированный</label><br>
-        <label><input type="radio" name="char" value="tank"> Танк (медленный, огромный)</label>
+        <label class="char-label">
+            <input type="radio" name="char" value="light">
+            <span class="char-info">Ловкач (Быстрый)</span>
+            <span style="color:#ff0055;">●</span>
+        </label>
+        <label class="char-label">
+            <input type="radio" name="char" value="normal" checked>
+            <span class="char-info">Баланс (Стандарт)</span>
+            <span style="color:#00e5ff;">●</span>
+        </label>
+        <label class="char-label">
+            <input type="radio" name="char" value="tank">
+            <span class="char-info">Танк (Огромный)</span>
+            <span style="color:#00ff88;">●</span>
+        </label>
     </div>
 
-    <button class="btn" onclick="startGame('bot')">Играть с Ботом</button>
-    <button class="btn" onclick="showOnlineUI()">Играть Онлайн (P2P)</button>
+    <button class="btn" style="background: linear-gradient(45deg, #ff0055, #ff5500); box-shadow: 0 4px 15px rgba(255, 0, 85, 0.4);" onclick="startGame('bot')">Играть с Ботом</button>
+    <button class="btn" onclick="showOnlineUI()">Онлайн (P2P)</button>
 
     <div id="online-ui">
-        <p>Ваш ID: <span id="my-id">Загрузка...</span></p>
+        <p>Ваш ID:</p>
+        <div class="id-display" id="my-id">Генерация...</div>
         <input type="text" id="peer-id-input" placeholder="Введите ID друга">
-        <br>
-        <button class="btn" onclick="connectToPeer()">Подключиться к другу</button>
+        <button class="btn" onclick="connectToPeer()">Подключиться</button>
     </div>
 </div>
 
 <canvas id="gameCanvas" width="400" height="600"></canvas>
 
 <script>
-    // --- НАСТРОЙКИ КЛАССОВ ---
     const classes = {
-        light: { radius: 20, maxSpeed: 8, color: '#ff5252' },
-        normal: { radius: 30, maxSpeed: 6, color: '#448aff' },
-        tank: { radius: 45, maxSpeed: 4, color: '#4caf50' }
+        light: { radius: 20, maxSpeed: 8, color: '#ff0055', glow: 'rgba(255, 0, 85, 0.6)' },
+        normal: { radius: 30, maxSpeed: 6, color: '#00e5ff', glow: 'rgba(0, 229, 255, 0.6)' },
+        tank: { radius: 45, maxSpeed: 4, color: '#00ff88', glow: 'rgba(0, 255, 136, 0.6)' }
     };
 
-    // --- ИГРОВЫЕ ПЕРЕМЕННЫЕ ---
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     let gameLoop;
-    let mode = ''; // 'bot' или 'p2p'
-    let isHost = true; // Для P2P: хост считает физику
+    let mode = ''; 
+    let isHost = true; 
 
-    // Игровые объекты
-    let p1 = { x: 200, y: 500, radius: 30, color: 'blue', vx: 0, vy: 0, score: 0 };
-    let p2 = { x: 200, y: 100, radius: 30, color: 'red', vx: 0, vy: 0, score: 0 };
-    let puck = { x: 200, y: 300, radius: 15, vx: 0, vy: 0, speedLimit: 15 };
+    let p1 = { x: 200, y: 500, radius: 30, color: '#00e5ff', glow: 'rgba(0, 229, 255, 0.6)', vx: 0, vy: 0, score: 0 };
+    let p2 = { x: 200, y: 100, radius: 30, color: '#ff0055', glow: 'rgba(255, 0, 85, 0.6)', vx: 0, vy: 0, score: 0 };
+    let puck = { x: 200, y: 300, radius: 15, vx: 0, vy: 0, speedLimit: 20 };
 
-    // --- УПРАВЛЕНИЕ P2P (PeerJS) ---
     let peer, conn;
     
     function initPeer() {
-        peer = new Peer(); // Создаем подключение к бесплатному сигнальному серверу PeerJS
+        peer = new Peer(); 
         peer.on('open', id => document.getElementById('my-id').innerText = id);
-        
-        // Если кто-то подключается к нам
         peer.on('connection', connection => {
             conn = connection;
-            isHost = true; // Хост считает физику шайбы
+            isHost = true; 
             setupConnection();
             startGame('p2p');
         });
@@ -85,7 +111,7 @@
         const id = document.getElementById('peer-id-input').value;
         if (!id) return;
         conn = peer.connect(id);
-        isHost = false; // Клиент просто шлет свои координаты и получает данные шайбы
+        isHost = false; 
         setupConnection();
         startGame('p2p');
     }
@@ -93,11 +119,9 @@
     function setupConnection() {
         conn.on('data', data => {
             if (isHost) {
-                // Хост получает позицию клиента (P2)
-                p2.x = 400 - data.x; // Зеркалим координаты для соперника
+                p2.x = 400 - data.x; 
                 p2.y = 600 - data.y;
             } else {
-                // Клиент получает позицию хоста (P2), шайбы и счет
                 p2.x = 400 - data.p1.x;
                 p2.y = 600 - data.p1.y;
                 puck.x = 400 - data.puck.x;
@@ -108,21 +132,18 @@
         });
     }
 
-    // --- ЛОГИКА ИГРЫ ---
     function startGame(selectedMode) {
         mode = selectedMode;
         const charChoice = document.querySelector('input[name="char"]:checked').value;
         
-        // Применяем характеристики
         p1.radius = classes[charChoice].radius;
         p1.color = classes[charChoice].color;
-        // Для бота задаем стандартные характеристики
+        p1.glow = classes[charChoice].glow;
         p2.radius = classes['normal'].radius; 
 
         document.getElementById('menu').style.display = 'none';
         canvas.style.display = 'block';
 
-        // Управление (Мышь / Тач)
         canvas.addEventListener('touchmove', handleMove);
         canvas.addEventListener('mousemove', handleMove);
 
@@ -142,7 +163,6 @@
         let newX = (clientX - rect.left) * scaleX;
         let newY = (clientY - rect.top) * scaleY;
 
-        // Ограничиваем движение своей половиной поля (низ)
         p1.x = Math.max(p1.radius, Math.min(canvas.width - p1.radius, newX));
         p1.y = Math.max(canvas.height / 2 + p1.radius, Math.min(canvas.height - p1.radius, newY));
     }
@@ -161,12 +181,10 @@
 
         if (distance < player.radius + pck.radius) {
             let angle = Math.atan2(dy, dx);
-            // Сила удара (базовая + отскок)
-            let force = 7; 
+            let force = 9; 
             pck.vx = Math.cos(angle) * force;
             pck.vy = Math.sin(angle) * force;
             
-            // Выталкиваем шайбу из игрока, чтобы не застревала
             pck.x = player.x + Math.cos(angle) * (player.radius + pck.radius);
             pck.y = player.y + Math.sin(angle) * (player.radius + pck.radius);
         }
@@ -174,19 +192,16 @@
 
     function update() {
         if (isHost || mode === 'bot') {
-            // Физика шайбы (считает только хост или одиночная игра)
             puck.x += puck.vx;
             puck.y += puck.vy;
-            puck.vx *= 0.99; // Трение
+            puck.vx *= 0.99; 
             puck.vy *= 0.99;
 
-            // Отскок шайбы от стен
             if (puck.x - puck.radius < 0 || puck.x + puck.radius > canvas.width) {
                 puck.vx *= -1;
                 puck.x = puck.x - puck.radius < 0 ? puck.radius : canvas.width - puck.radius;
             }
             if (puck.y - puck.radius < 0 || puck.y + puck.radius > canvas.height) {
-                // Гол? Ворота (по центру)
                 if (puck.x > 120 && puck.x < 280) {
                     if (puck.y < 0) { p1.score++; resetPuck(); }
                     else if (puck.y > canvas.height) { p2.score++; resetPuck(); }
@@ -196,25 +211,34 @@
                 }
             }
 
-            // Столкновения
             resolveCollision(p1, puck);
             resolveCollision(p2, puck);
 
-            // Логика бота
+            // --- УМНЫЙ БОТ ---
             if (mode === 'bot') {
-                let targetX = puck.y < canvas.height / 2 ? puck.x : canvas.width / 2;
-                p2.x += (targetX - p2.x) * 0.1; // Скорость реакции
-                // Ограничение бота в верхней половине
-                p2.y = 100; // Держится на одной линии (для простоты)
+                if (puck.y < canvas.height / 2) {
+                    // АТАКА: Шайба на стороне бота
+                    p2.x += (puck.x - p2.x) * 0.12; 
+                    p2.y += (puck.y - p2.y) * 0.12; // Бьет прямо в шайбу, даже если она стоит
+                } else {
+                    // ЗАЩИТА: Шайба на стороне игрока
+                    p2.x += (puck.x - p2.x) * 0.05; 
+                    p2.y += (100 - p2.y) * 0.05; // Возвращается к воротам
+                }
+
+                // Не пускаем бота за центральную линию и за экран
+                if (p2.y > canvas.height / 2 - p2.radius) p2.y = canvas.height / 2 - p2.radius;
+                if (p2.y < p2.radius) p2.y = p2.radius;
+                if (p2.x < p2.radius) p2.x = p2.radius;
+                if (p2.x > canvas.width - p2.radius) p2.x = canvas.width - p2.radius;
             }
         }
 
-        // Обмен данными P2P
         if (mode === 'p2p' && conn && conn.open) {
             if (isHost) {
                 conn.send({ p1: p1, puck: puck, score1: p1.score, score2: p2.score });
             } else {
-                conn.send({ x: p1.x, y: p1.y }); // Клиент шлет только свою позицию
+                conn.send({ x: p1.x, y: p1.y }); 
             }
         }
 
@@ -222,47 +246,98 @@
         gameLoop = requestAnimationFrame(update);
     }
 
+    // --- ОТРИСОВКА С КРАСИВЫМИ ТЕКСТУРАМИ И НЕОНОМ ---
     function draw() {
-        // Очистка и фон
-        ctx.fillStyle = '#e0f7fa';
+        // Очистка
+        ctx.fillStyle = '#080812';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+        // Разметка поля
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = '#1a1a3a';
+        
         // Центральная линия
         ctx.beginPath();
         ctx.moveTo(0, canvas.height / 2);
         ctx.lineTo(canvas.width, canvas.height / 2);
-        ctx.strokeStyle = '#00acc1';
         ctx.stroke();
 
-        // Ворота
-        ctx.fillStyle = '#ff5252';
-        ctx.fillRect(120, 0, 160, 10); // Верхние
-        ctx.fillStyle = '#448aff';
-        ctx.fillRect(120, canvas.height - 10, 160, 10); // Нижние
+        // Центральный круг
+        ctx.beginPath();
+        ctx.arc(canvas.width / 2, canvas.height / 2, 50, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Ворота свечение
+        ctx.shadowBlur = 15;
+        
+        // Ворота Бота (Красные)
+        ctx.shadowColor = '#ff0055';
+        ctx.fillStyle = '#ff0055';
+        ctx.fillRect(120, 0, 160, 15);
+        
+        // Ворота Игрока (Синие)
+        ctx.shadowColor = '#00e5ff';
+        ctx.fillStyle = '#00e5ff';
+        ctx.fillRect(120, canvas.height - 15, 160, 15);
 
         // Очки
-        ctx.fillStyle = '#555';
-        ctx.font = '40px Arial';
-        ctx.fillText(p2.score, 20, canvas.height / 2 - 20);
-        ctx.fillText(p1.score, 20, canvas.height / 2 + 50);
+        ctx.shadowBlur = 5;
+        ctx.shadowColor = '#ffffff';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+        ctx.font = '70px Orbitron';
+        ctx.textAlign = 'center';
+        ctx.fillText(p2.score, canvas.width / 2, canvas.height / 2 - 80);
+        ctx.fillText(p1.score, canvas.width / 2, canvas.height / 2 + 130);
 
-        // Игрок 1
-        ctx.beginPath();
-        ctx.arc(p1.x, p1.y, p1.radius, 0, Math.PI * 2);
-        ctx.fillStyle = p1.color;
-        ctx.fill();
+        // Сброс теней
+        ctx.shadowBlur = 0;
 
-        // Игрок 2 (или Бот)
-        ctx.beginPath();
-        ctx.arc(p2.x, p2.y, p2.radius, 0, Math.PI * 2);
-        ctx.fillStyle = p2.color;
-        ctx.fill();
+        // Рисуем игрока 1 (Градиент + Свечение)
+        drawPlayer(p1);
+
+        // Рисуем игрока 2 / Бота (Градиент + Свечение)
+        drawPlayer(p2);
 
         // Шайба
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = '#ffff00';
         ctx.beginPath();
         ctx.arc(puck.x, puck.y, puck.radius, 0, Math.PI * 2);
-        ctx.fillStyle = '#222';
+        ctx.fillStyle = '#fff';
         ctx.fill();
+        ctx.strokeStyle = '#ffcc00';
+        ctx.lineWidth = 4;
+        ctx.stroke();
+        ctx.shadowBlur = 0; // Сброс
+    }
+
+    function drawPlayer(p) {
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = p.glow;
+        
+        // Внешний круг
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        
+        // Градиент для объемности
+        let grad = ctx.createRadialGradient(p.x - p.radius/3, p.y - p.radius/3, p.radius/10, p.x, p.y, p.radius);
+        grad.addColorStop(0, '#ffffff');
+        grad.addColorStop(0.2, p.color);
+        grad.addColorStop(1, '#000000');
+        
+        ctx.fillStyle = grad;
+        ctx.fill();
+        
+        // Внутреннее углубление (ручка)
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius * 0.4, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+        ctx.fill();
+        ctx.strokeStyle = p.color;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        
+        ctx.shadowBlur = 0;
     }
 </script>
 </body>
